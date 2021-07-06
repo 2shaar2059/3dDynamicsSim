@@ -1,25 +1,14 @@
 #https://stackoverflow.com/questions/48911643/set-uvc-equivilent-for-a-3d-quiver-plot-in-matplotlib
 
-
 import numpy as np
-from math import sin, cos
-# This import registers the 3D projection, but is otherwise unused.
-from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 unused import
-import mpl_toolkits.mplot3d.axes3d as p3
 import matplotlib.animation as animation
-
 import matplotlib.pyplot as plt
-import numpy as np
-
 
 timestamps = []
 rotations = []
 translations  = []
-
 inputFile = "3dAnimationData.txt"
-
 linesOfDataPerTimestep = 8 #number of lines recorded at each timestep in the log
-
 with open(inputFile, 'r') as f:
 	lines = f.readlines()
 	print(len(lines))
@@ -49,10 +38,11 @@ dt = timestamps[1]-timestamps[0]
 
 fig = plt.figure()
 ax = fig.gca(projection='3d')
+ax.set_title('3D Test')
 
 coordinates = np.concatenate(translations)
-min_bound = min(coordinates)
-max_bound = max(coordinates)
+min_bound = min(coordinates)-1
+max_bound = max(coordinates)+1
 ax.set_xlim3d([min_bound, max_bound])
 ax.set_xlabel('X')
 
@@ -61,9 +51,6 @@ ax.set_ylabel('Y')
 
 ax.set_zlim3d([min_bound, max_bound])
 ax.set_zlabel('Z')
-
-ax.set_title('3D Test')
-
 
 
 pos3d = translations[0]
@@ -79,17 +66,12 @@ arrow_length = 1
 x_arrow_moving = ax.quiver(x_start,y_start,z_start,x_start+arrow_length,y_start,z_start, color="red")
 y_arrow_moving = ax.quiver(x_start,y_start,z_start,x_start,y_start+arrow_length,z_start, color="green")
 z_arrow_moving = ax.quiver(x_start,y_start,z_start,x_start,y_start,z_start+arrow_length, color="blue")
-
 moving_frame = [[x_arrow_moving, y_arrow_moving, z_arrow_moving]]
 
-totalTimestamps = len(timestamps)
 fps = 30 #frames per second in the animation
-
-timestamps_per_frame = int(1/(fps*dt))
-totalFrames = int(totalTimestamps/timestamps_per_frame)
-print(totalTimestamps, timestamps_per_frame, totalFrames)
-def update_plot(num, moving_frame):
-	idx = num*timestamps_per_frame
+timestamps_per_frame = int(1/(fps*dt)) #number of input data entries (or timestamps) to skip between each animation frame
+def update_plot(frameNumber, moving_frame):
+	idx = frameNumber*timestamps_per_frame #idx is the timestamp number
 	pos3d = translations[idx]
 
 	moving_frame[0].set_segments([[pos3d,pos3d+rotations[idx][:,0]]])
@@ -98,6 +80,7 @@ def update_plot(num, moving_frame):
 	plt.suptitle("{:.2f} seconds".format(idx*dt))
 	return moving_frame
 
+totalTimestamps = len(timestamps)
+totalFrames = int(totalTimestamps/timestamps_per_frame)
 ani = animation.FuncAnimation(fig, update_plot, frames=totalFrames, fargs=(moving_frame), interval=750/fps, blit=False)
 plt.show()
-
