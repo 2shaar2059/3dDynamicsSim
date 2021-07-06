@@ -50,36 +50,35 @@ dt = timestamps[1]-timestamps[0]
 fig = plt.figure()
 ax = fig.gca(projection='3d')
 
-def show_grid(minX, minY, minZ, maxX, maxY, maxZ):
-	# Setting the axes properties
-	ax.set_xlim3d([minX, maxX])
-	ax.set_xlabel('X')
+coordinates = np.concatenate(translations)
+min_bound = min(coordinates)
+max_bound = max(coordinates)
+ax.set_xlim3d([min_bound, max_bound])
+ax.set_xlabel('X')
 
-	ax.set_ylim3d([minY, maxY])
-	ax.set_ylabel('Y')
+ax.set_ylim3d([min_bound, max_bound])
+ax.set_ylabel('Y')
 
-	ax.set_zlim3d([minZ, maxZ])
-	ax.set_zlabel('Z')
+ax.set_zlim3d([min_bound, max_bound])
+ax.set_zlabel('Z')
 
-	ax.set_title('3D Test')
+ax.set_title('3D Test')
 
 
-show_grid(-20,-20,-20,20,20,20)
-
-x_arrow_fixed = ax.quiver(0,0,0,10,0,0, color="red")
-y_arrow_fixed = ax.quiver(0,0,0,0,10,0, color="green")
-z_arrow_fixed = ax.quiver(0,0,0,0,0,10, color="blue")
 
 pos3d = translations[0]
 x_start = pos3d[0]
 y_start = pos3d[1]
 z_start = pos3d[2]
 
-ext=3
+x_arrow_fixed = ax.quiver(x_start,y_start,z_start,max_bound,y_start,z_start, color="red")
+y_arrow_fixed = ax.quiver(x_start,y_start,z_start,x_start,max_bound,z_start, color="green")
+z_arrow_fixed = ax.quiver(x_start,y_start,z_start,x_start,y_start,max_bound, color="blue")
 
-x_arrow_moving = ax.quiver(x_start,y_start,z_start,x_start+ext,y_start,z_start, color="red")
-y_arrow_moving = ax.quiver(x_start,y_start,z_start,x_start,y_start+ext,z_start, color="green")
-z_arrow_moving = ax.quiver(x_start,y_start,z_start,x_start,y_start,z_start+ext, color="blue")
+arrow_length = 1
+x_arrow_moving = ax.quiver(x_start,y_start,z_start,x_start+arrow_length,y_start,z_start, color="red")
+y_arrow_moving = ax.quiver(x_start,y_start,z_start,x_start,y_start+arrow_length,z_start, color="green")
+z_arrow_moving = ax.quiver(x_start,y_start,z_start,x_start,y_start,z_start+arrow_length, color="blue")
 
 moving_frame = [[x_arrow_moving, y_arrow_moving, z_arrow_moving]]
 
