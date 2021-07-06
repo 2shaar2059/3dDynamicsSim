@@ -187,11 +187,12 @@ void RigidBody::logDataToFile() {
 	logFile.open("3dAnimationData.txt");
 
 	for(long i=0; i<numberOfDatapointsLogged; i++){
+		logFile << time[i]<< "\n";
 		logFile << orientations[i]<< "\n";
 		logFile << posX_global_arr[i]<< "\n";
 		logFile << posY_global_arr[i]<< "\n";
 		logFile << posZ_global_arr[i]<< "\n";
-		logFile << "\n";
+		logFile << "----------------------------\n";
 	}
 	logFile.close();
 }

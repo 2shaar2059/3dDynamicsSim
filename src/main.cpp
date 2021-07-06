@@ -37,7 +37,7 @@ int main()
 
 	Vector3d ang_vel_inital;	ang_vel_inital << 0,	0,		0; //thetaXdot, thetaYdot, thetaZdot 	[rad/s, rad/s, rad/s]
 	Vector3d lin_pos_inital;	lin_pos_inital << 0,	0,		0; //posX, psoY, posZ					[m, m, m]
-	Vector3d lin_vel_inital;	lin_vel_inital << 0,	0,		0; //velX, velY, velZ					[m/s, m/s, m/s]
+	Vector3d lin_vel_inital;	lin_vel_inital << 0.5,	0,		0; //velX, velY, velZ					[m/s, m/s, m/s]
 
 	Matrix3d InertiaTensor; InertiaTensor << 1, 0, 0,
 									         0, 2, 0,
