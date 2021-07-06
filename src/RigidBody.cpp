@@ -149,7 +149,6 @@ void RigidBody::update(double dt) {
 	H_bZ.push_back(H_b(2));
 
 	Vector3d H_g = q.inverse() * H_b;
-	//std::cout<<H_g<<"\n\n";
 	H_gX.push_back(H_g(0));
 	H_gY.push_back(H_g(1));
 	H_gZ.push_back(H_g(2));
@@ -171,6 +170,14 @@ void RigidBody::update(double dt) {
 	time.push_back(currentTime);
 
 	x = rk4(x, u, dt);
+
+	//numerically integrating the quaternion makes its length "drift" away from having a unit norm. Need to renormalize:
+	double q_length = getRotationGtoB().norm();
+	x(6)/=q_length;
+	x(7)/=q_length;
+	x(8)/=q_length;
+	x(9)/=q_length;
+
 	currentTime += dt;
 	numberOfDatapointsLogged++;
 }
