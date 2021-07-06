@@ -3,6 +3,7 @@
 #include <chrono>
 #include <unistd.h>
 #include <eigen3/Eigen/Dense>
+#include <Python.h>
 
 #include "RigidBody.h"
 #include "utils.h"
@@ -10,6 +11,17 @@
 #define print(x) std::cout<<(#x)<<":\n"<<(x)<<"\n\n";
 
 using namespace Eigen;
+
+void runPythonScript(const char* filename){
+	FILE* fp;
+
+	Py_Initialize();
+
+	fp = _Py_fopen(filename, "r");
+	PyRun_SimpleFile(fp, filename);
+
+	Py_Finalize();
+}
 
 int main()
 {
@@ -31,21 +43,25 @@ int main()
 									         0, 2, 0,
 									         0, 0, 3;
 
-	RigidBody rigidBody1 = RigidBody(1, InertiaTensor, dt, rotation_initial, ang_vel_inital, lin_pos_inital, lin_vel_inital);
+	RigidBody rigidBody1 = RigidBody(1, InertiaTensor, rotation_initial, ang_vel_inital, lin_pos_inital, lin_vel_inital);
 
 	while (currTime <= maxTime) {
 		rigidBody1.clearAppliedForcesAndMoments();
 		//rigidBody1.applyForce(rigidBody1.getRotationBtoG()*Vector3d(0, 0, -0.2), Vector3d(0, 5e-2, 0));
 		//rigidBody1.applyForce(rigidBody1.getRotationBtoG()*Vector3d(0, 0, 0.2), Vector3d(0, 0, 0));
 		rigidBody1.applyMoment(Vector3d(1, 0, 0));
-		//rigidBody1.applyForce(rigidBody1.getRotationBtoG()*Vector3d(0, 0, 9.81), Vector3d(0, 0, 0));
-		rigidBody1.update(currTime);
+		rigidBody1.applyForce(rigidBody1.getRotationGtoB()*Vector3d(0, 0, 9.81), Vector3d(0, 0, 0));
+		rigidBody1.update(dt);
 		currTime += dt;
 	}
 
 	auto end = std::chrono::steady_clock::now();
 	std::cout << "Elapsed time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
 	rigidBody1.showPlots();
+	rigidBody1.logDataToFile();
+
+	runPythonScript("foo6.py");
+
 
 	return 0;
 }

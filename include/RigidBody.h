@@ -31,7 +31,7 @@ public:
 		"P_g_initial" is the initial linear position expressed in the global coordinates
 		"V_g_initial" is the initial linear velocity expressed in the global coordinates
 	*/
-	RigidBody(double mass, Matrix3d InertiaTensor, double timestep, Quaternion<double> rotation_initial, Vector3d w_b_initial, Vector3d P_g_initial, Vector3d V_g_initial);
+	RigidBody(double mass, Matrix3d InertiaTensor, Quaternion<double> rotation_initial, Vector3d w_b_initial, Vector3d P_g_initial, Vector3d V_g_initial);
 
 	Quaternion<double> getRotationGtoB(); //return the quaternion representing the rotation from the global to body frame
 	
@@ -63,7 +63,18 @@ public:
 	*/
 	VectorXd rk4(VectorXd x, VectorXd u, double dt);
 
-	void update(double);
+	/*
+		updates the state by
+			1. calculating the state dynamics (xdot)
+			2. integrating the state dynamics with an ode integrator with a timestep of "dt"
+		logs the updated state data to the private vector variables
+	*/
+	void update(double dt);
+
+	/*
+		writes the rotation matrix and linear position private vectors to a file for a python script to use for an animation
+	*/
+	void logDataToFile();
 	
 	void showPlots();
 
@@ -80,33 +91,19 @@ private:
 		angular momentum vector (Body frame)
 	*/
 	Vector13d x; //state
-	// TODO: typedef Matrix<float, 3, 1> Vector3f;????
 
 	/*
 		Net force vector (body frame)
 		Net torque vector (body frame)
 	*/
-	Vector6d u; //inputs (applied forces and torques)
+	Vector6d u; //inputs (applied forces [N] and torques [Nm])
 
-/*
-	Vector3d Fnet_b; //Net force vector (body frame)
-	Vector3d Anet_b; //Net acceleration vector (body frame)
-	Vector3d Anet_g; //Net acceleration vector (global frame)
-	Vector3d V_g; //velocity vector (global frame)
-	Vector3d P_g; //position vector (global frame)
-
-	Vector3d Tnet_b; //Net torque vector (body frame)
-	Vector3d Alpha_net_b; //Net angular acceleration vector (body frame)
-	Vector3d H_b; //angular momentum vector (Body frame)
-	Vector3d w_b; //angular velocity vector (Body frame)
-	Vector3d H_g; //angular momentum vector (Global frame)
-	Vector3d w_g; //angular velocity vector (Global frame)
-
-	Quaternion<double> q; //quaternion representing rotation from global frame to body frame
-*/
-	double dt; //timestep: [s]
+	double currentTime; //current time into simulation: [s]
 
 	//Vectors for logging data to be plotted
+	long numberOfDatapointsLogged; //keeps track of how many simulation timesteps logged data
+
+	std::vector <Matrix3d> orientations; //holds the rotation matrix from the global to body frame at each timestep
 
 	std::vector <double> thetaX;
 	std::vector <double> thetaY;
