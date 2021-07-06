@@ -286,6 +286,8 @@ void RigidBody::update(double currTime) {
 
 void RigidBody::showPlots() {
 	plt::subplot(1, 3, 1);
+	plt::arrow(0,0,0, 1, "red");
+
 	plt::plot(time, thetaX, "thetaX");
 	plt::legend();
 	plt::subplot(1, 3, 2);
@@ -349,6 +351,7 @@ void RigidBody::showPlots() {
 	*/
 
 	plt::subplot(3, 3, 4);
+
 	plt::plot(time, velX_global_arr, "velX_global_arr");
 	plt::legend();
 	plt::subplot(3, 3, 5);
