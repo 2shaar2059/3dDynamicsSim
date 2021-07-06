@@ -4,6 +4,26 @@
 
 using namespace Eigen;
 
+
+struct state{
+	Vector3d P_g; //position vector (global frame)
+	Vector3d V_g; //velocity vector (global frame)
+	Quaternion<double> q; //quaternion representing rotation from global frame to body frame
+	Vector3d H_b; //angular momentum vector (Body frame)
+};
+
+
+struct state_dot{
+	Vector3d V_g; //velocity vector (global frame)
+	Vector3d Anet_g; //Net acceleration vector (global frame)
+	Quaternion<double> q_dot; //TODO
+	Vector3d Tnet_b; //Net torque vector (body frame)
+};
+
+typedef Matrix<double, 13, 1> Vector13d;
+typedef Matrix<double, 6, 1> Vector6d;
+
+
 class RigidBody {
 public:
 	/*
@@ -29,7 +49,20 @@ public:
 	void applyMoment(Vector3d moment);
 	
 	void clearAppliedForcesAndMoments();
+
+	/*
+		returns the derivative of the state vector
+	*/
+	Vector13d f(Vector13d x, Vector6d u);
 	
+	/*Fourth order Runge-Kutta integration.
+		Keyword arguments:
+		x -- vector of states
+		u -- vector of inputs (constant for dt)
+		dt -- time for which to integrate
+	*/
+	VectorXd rk4(VectorXd x, VectorXd u, double dt);
+
 	void update(double);
 	
 	void showPlots();
@@ -40,6 +73,22 @@ private:
 	Matrix3d InertiaTensor; // [kg*m^2]
 	Matrix3d InertiaTensorInverse;
 
+	/*
+		position vector (global frame)
+		velocity vector (global frame)
+		quaternion representing rotation from global frame to body frame
+		angular momentum vector (Body frame)
+	*/
+	Vector13d x; //state
+	// TODO: typedef Matrix<float, 3, 1> Vector3f;????
+
+	/*
+		Net force vector (body frame)
+		Net torque vector (body frame)
+	*/
+	Vector6d u; //inputs (applied forces and torques)
+
+/*
 	Vector3d Fnet_b; //Net force vector (body frame)
 	Vector3d Anet_b; //Net acceleration vector (body frame)
 	Vector3d Anet_g; //Net acceleration vector (global frame)
@@ -54,7 +103,7 @@ private:
 	Vector3d w_g; //angular velocity vector (Global frame)
 
 	Quaternion<double> q; //quaternion representing rotation from global frame to body frame
-
+*/
 	double dt; //timestep: [s]
 
 	//Vectors for logging data to be plotted

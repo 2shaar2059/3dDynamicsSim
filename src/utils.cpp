@@ -1,5 +1,6 @@
 #include "utils.h"
 #include <math.h>
+#include <eigen3/Eigen/Dense>
 
 
 double rad(double degrees) {
