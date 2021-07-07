@@ -123,6 +123,7 @@ VectorXd RigidBody::rk4(VectorXd x, VectorXd u, double dt) {
 	return x + dt / 6.0 * (k1 + 2.0 * k2 + 2.0 * k3 + k4);
 }
 
+//https://www.cs.cmu.edu/~baraff/sigcourse/notesd1.pdf
 void RigidBody::update(double dt) {
 	Quaternion<double> q = getRotationGtoB();
 	Matrix3d R = q.toRotationMatrix();
