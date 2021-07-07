@@ -54,18 +54,18 @@ ax.set_zlabel('Z')
 
 
 pos3d = translations[0]
-x_start = pos3d[0]
-y_start = pos3d[1]
-z_start = pos3d[2]
+x0 = pos3d[0]
+y0 = pos3d[1]
+z0 = pos3d[2]
 
-x_arrow_fixed = ax.quiver(x_start,y_start,z_start,max_bound,y_start,z_start, color="red")
-y_arrow_fixed = ax.quiver(x_start,y_start,z_start,x_start,max_bound,z_start, color="green")
-z_arrow_fixed = ax.quiver(x_start,y_start,z_start,x_start,y_start,max_bound, color="blue")
+x_arrow_fixed = ax.quiver(x0,y0,z0,max_bound,y0,z0, color="red")
+y_arrow_fixed = ax.quiver(x0,y0,z0,x0,max_bound,z0, color="green")
+z_arrow_fixed = ax.quiver(x0,y0,z0,x0,y0,max_bound, color="blue")
 
 arrow_length = 1
-x_arrow_moving = ax.quiver(x_start,y_start,z_start,x_start+arrow_length,y_start,z_start, color="red")
-y_arrow_moving = ax.quiver(x_start,y_start,z_start,x_start,y_start+arrow_length,z_start, color="green")
-z_arrow_moving = ax.quiver(x_start,y_start,z_start,x_start,y_start,z_start+arrow_length, color="blue")
+x_arrow_moving = ax.quiver(x0,y0,z0,x0+arrow_length,y0,z0, color="red")
+y_arrow_moving = ax.quiver(x0,y0,z0,x0,y0+arrow_length,z0, color="green")
+z_arrow_moving = ax.quiver(x0,y0,z0,x0,y0,z0+arrow_length, color="blue")
 moving_frame = [[x_arrow_moving, y_arrow_moving, z_arrow_moving]]
 
 fps = 30 #frames per second in the animation
