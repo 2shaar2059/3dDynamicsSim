@@ -11,7 +11,6 @@ inputFile = "3dAnimationData.txt"
 linesOfDataPerTimestep = 8 #number of lines recorded at each timestep in the log
 with open(inputFile, 'r') as f:
 	lines = f.readlines()
-	print(len(lines))
 	for i in range(0, len(lines), linesOfDataPerTimestep):
 		timestamps.append(float(lines[i].strip()))
 		roation_matrix_row_1 = lines[i+1].split()

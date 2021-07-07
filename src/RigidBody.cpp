@@ -77,7 +77,6 @@ void RigidBody::clearAppliedForcesAndMoments() {
 	u << 0, 0, 0, 0, 0, 0;
 }
 
-
 Vector13d RigidBody::f(Vector13d x, Vector6d u) {
 	Vector13d xdot; //derivative of state
 
@@ -154,10 +153,6 @@ void RigidBody::update(double dt) {
 	H_gY.push_back(H_g(1));
 	H_gZ.push_back(H_g(2));
 
-	// accelX_global_arr.push_back(Anet_g(0));
-	// accelY_global_arr.push_back(Anet_g(1));
-	// accelZ_global_arr.push_back(Anet_g(2));
-
 	Vector3d V_g; V_g << x(3), x(4), x(5);
 	velX_global_arr.push_back(V_g(0));
 	velY_global_arr.push_back(V_g(1));
@@ -210,6 +205,7 @@ void RigidBody::showPlots() {
 	plt::legend();
 	plt::show();
 
+
 	plt::subplot(4, 3, 1);
 	plt::plot(time, w_bX, "w_bX");
 	plt::legend();
@@ -219,6 +215,7 @@ void RigidBody::showPlots() {
 	plt::subplot(4, 3, 3);
 	plt::plot(time, w_bZ, "w_bZ");
 	plt::legend();
+
 	plt::subplot(4, 3, 4);
 	plt::plot(time, w_gX, "w_gX");
 	plt::legend();
@@ -238,6 +235,7 @@ void RigidBody::showPlots() {
 	plt::subplot(4, 3, 9);
 	plt::plot(time, H_bZ, "H_bZ");
 	plt::legend();
+
 	plt::subplot(4, 3, 10);
 	plt::plot(time, H_gX, "H_gX");
 	plt::legend();
@@ -249,35 +247,24 @@ void RigidBody::showPlots() {
 	plt::legend();
 	plt::show();
 
-	/*
-		plt::subplot(3, 3, 1);
-		plt::plot(time, accelX_global_arr, "accX_global_arr");
-		plt::legend();
-		plt::subplot(3, 3, 2);
-		plt::plot(time, accelY_global_arr, "accY_global_arr");
-		plt::legend();
-		plt::subplot(3, 3, 3);
-		plt::plot(time, accelZ_global_arr, "accZ_global_arr");
-		plt::legend();
-		*/
 
-	plt::subplot(3, 3, 4);
+	plt::subplot(2, 3, 1);
 	plt::plot(time, velX_global_arr, "velX_global_arr");
 	plt::legend();
-	plt::subplot(3, 3, 5);
+	plt::subplot(2, 3, 2);
 	plt::plot(time, velY_global_arr, "velY_global_arr");
 	plt::legend();
-	plt::subplot(3, 3, 6);
+	plt::subplot(2, 3, 3);
 	plt::plot(time, velZ_global_arr, "velZ_global_arr");
 	plt::legend();
 
-	plt::subplot(3, 3, 7);
+	plt::subplot(2, 3, 4);
 	plt::plot(time, posX_global_arr, "posX_global_arr");
 	plt::legend();
-	plt::subplot(3, 3, 8);
+	plt::subplot(2, 3, 5);
 	plt::plot(time, posY_global_arr, "posY_global_arr");
 	plt::legend();
-	plt::subplot(3, 3, 9);
+	plt::subplot(2, 3, 6);
 	plt::plot(time, posZ_global_arr, "posZ_global_arr");
 	plt::legend();
 	plt::show();

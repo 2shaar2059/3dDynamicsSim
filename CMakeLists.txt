@@ -10,9 +10,3 @@ find_package(Eigen3 REQUIRED)
 
 add_executable(main src/main.cpp src/utils.cpp src/RigidBody.cpp)
 target_link_libraries(main Eigen3::Eigen python3.8)
-
-add_executable(gyroToRotation src/gyroToRotation.cpp src/utils.cpp)
-target_link_libraries(gyroToRotation Eigen3::Eigen)
-
-add_executable(rotationTest src/rotationTest.cpp)
-target_link_libraries(rotationTest)
