@@ -7,9 +7,6 @@
 using namespace Eigen;
 namespace plt = matplotlibcpp;
 
-/*
-	Body Frame's origin is at the center of mass
-*/
 RigidBody::RigidBody(double mass, Matrix3d InertiaTensor, Quaternion<double> rotation_initial, Vector3d w_b_initial, Vector3d P_g_initial, Vector3d V_g_initial) {
 	g << 0, 0, -9.81; //gravity
 
@@ -22,55 +19,33 @@ RigidBody::RigidBody(double mass, Matrix3d InertiaTensor, Quaternion<double> rot
 
 	numberOfDatapointsLogged = 0;
 
-	//setting the components of the global linear position
-	x(0) = P_g_initial(0);
-	x(1) = P_g_initial(1);
-	x(2) = P_g_initial(2);
+	x.segment(0,3) = P_g_initial; //using a block operation to embed the 3 components of the global-linear-position-vector into positions 0,1,2 of the overall state vector, x
+	
+	x.segment(3,3) = V_g_initial; //using a block operation to embed the 3 components of the global-linear-velocity-vector into positions 3,4,5 of the overall state vector, x
 
-	//setting the components of the global linear velocity
-	x(3) = V_g_initial(0);
-	x(4) = V_g_initial(1);
-	x(5) = V_g_initial(2);
+	x.segment(6,4) = rotation_initial.coeffs(); //using a block operation to embed the 4 components of the orientation-quaternion into positions 6,7,8,9 of the overall state vector, x
 
-	//setting the components of the orientation quaternion
-	x(6) = rotation_initial.w();
-	x(7) = rotation_initial.x();
-	x(8) = rotation_initial.y();
-	x(9) = rotation_initial.z();
-
-	//setting the components of the body angular momentum
 	Vector3d H_b = InertiaTensor * w_b_initial;
-	x(10) = H_b(0);
-	x(11) = H_b(1);
-	x(12) = H_b(2);
+	x.segment(10,3) = H_b; //using a block operation to embed the 3 components of the body-angular-momentum-vector into positions 10,11,12 of the overall state vector, x
 
 	u << 0, 0, 0, 0, 0, 0;
 }
 
 Quaternion<double> RigidBody::getRotationGtoB() {
-	return Quaternion<double>(x(6), x(7), x(8), x(9));
-
+	return Quaternion<double>(x(9), x(6), x(7), x(8)); //returning the quaternion that is represented by the 4 quaternion coefficents that are embedded in the state vector, x
 }
 
 Quaternion<double> RigidBody::getRotationBtoG() {
-	return (Quaternion<double>(x(6), x(7), x(8), x(9))).inverse();
-}
-
-void RigidBody::applyForce(Vector3d force, Vector3d pointOfApplication) {
-	u(0) += force(0);
-	u(1) += force(1);
-	u(2) += force(2);
-
-	Vector3d moment = pointOfApplication.cross(force);
-	u(3) += moment(0);
-	u(4) += moment(1);
-	u(5) += moment(2);
+	return getRotationGtoB().inverse();
 }
 
 void RigidBody::applyMoment(Vector3d moment) {
-	u(3) += moment(0);
-	u(4) += moment(1);
-	u(5) += moment(2);
+	u.segment(3,3) += moment; //using a block operation to embed the 3 components of the applied-body-moment-vector into positions 3,4,5 of the overall input vector, u
+}
+
+void RigidBody::applyForce(Vector3d force, Vector3d pointOfApplication) {
+	u.segment(0,3) += force; //using a block operation to embed the 3 components of the applied-body-force-vector into positions 0,1,2 of the overall input vector, u
+	applyMoment(pointOfApplication.cross(force)); //accounting for the applied-body-force's resulting moment
 }
 
 void RigidBody::clearAppliedForcesAndMoments() {
@@ -78,37 +53,24 @@ void RigidBody::clearAppliedForcesAndMoments() {
 }
 
 Vector13d RigidBody::f(Vector13d x, Vector6d u) {
-	Vector13d xdot; //derivative of state
+	Vector13d xdot; //derivative of the state vector
 
-	//setting the components of the global linear velocity (derivatvie of global linear position)
-	xdot(0) = x(3);
-	xdot(1) = x(4);
-	xdot(2) = x(5);
+	xdot.segment(0,3) = x.segment(3,3); //using a block operation to embed the components of the global-linear-velocity-vector (derivative of global linear position) into positions 0,1,2 of the overall state vector
 
-	//setting the components of the global linear acceleration (derivatvie of global linear velocity)
 	Vector3d Fnet_b; Fnet_b << u(0), u(1), u(2);
 	Vector3d Anet_b = Fnet_b / m;
 	Quaternion<double> q = getRotationGtoB();
 	Vector3d Anet_g = q.inverse() * Anet_b + g;
-	xdot(3) = Anet_g(0);
-	xdot(4) = Anet_g(1);
-	xdot(5) = Anet_g(2);
+	xdot.segment(3,3) = Anet_g; //using a block operation to embed the components of the global-linear-acceleration-vector (derivative of global linear velocity) into positions 3,4,5 the overall state vector
 
-	//setting the components of the derivative of the orientation quaternion
 	Vector3d H_b; H_b << x(10), x(11), x(12);
 	Vector3d w_b = InertiaTensorInverse * H_b;
-	Quaternion<double> w_b_quaternion = Quaternion<double>(0, w_b(0), w_b(1), w_b(2));
-	Quaternion<double> qdot = Quaternion<double>(0.5 * (q * w_b_quaternion).coeffs()); //TODO: might have to switch the order of w_B and q (pg.7 https://arxiv.org/pdf/1708.08680.pdf)
-	xdot(6) = qdot.w();
-	xdot(7) = qdot.x();
-	xdot(8) = qdot.y();
-	xdot(9) = qdot.z();
+	Quaternion<double> w_b_quaternion_form = Quaternion<double>(0, w_b(0), w_b(1), w_b(2));
+	Quaternion<double> qdot = Quaternion<double>(0.5 * (q * w_b_quaternion_form).coeffs()); //formula 14 from pg.7 of https://arxiv.org/pdf/0811.2889.pdf
+	xdot.segment(6,4) = qdot.coeffs(); //using a block operation to embed the components of the derivative-of-the-orientation-quaternion into positions 6,7,8,9 of the overall state vector
 
-	//setting the components of the body torque (derivative of body angular momentum)
 	Vector3d Tnet_b; Tnet_b << u(3), u(4), u(5);
-	xdot(10) = Tnet_b(0);
-	xdot(11) = Tnet_b(1);
-	xdot(12) = Tnet_b(2);
+	xdot.segment(10,3) = Tnet_b; //using a block operation to embed the components of the body-torque-vector (derivative of body angular momentum) into positions 10,11,12 of the overall state vector
 
 	return xdot;
 }
@@ -122,7 +84,6 @@ VectorXd RigidBody::rk4(VectorXd x, VectorXd u, double dt) {
 	return x + dt / 6.0 * (k1 + 2.0 * k2 + 2.0 * k3 + k4);
 }
 
-//https://www.cs.cmu.edu/~baraff/sigcourse/notesd1.pdf
 void RigidBody::update(double dt) {
 	Quaternion<double> q = getRotationGtoB();
 	Matrix3d R = q.toRotationMatrix();
@@ -169,10 +130,7 @@ void RigidBody::update(double dt) {
 
 	//numerically integrating the quaternion makes its length "drift" away from having a unit norm. Need to renormalize:
 	double q_length = getRotationGtoB().norm();
-	x(6)/=q_length;
-	x(7)/=q_length;
-	x(8)/=q_length;
-	x(9)/=q_length;
+	x.segment(6, 4)/= q_length; //using a block operation to renormalize the components of state vector, x, that are the 4 coefficents (at indexes 6,7,8,9) of the Rigid Body's orientation-quaternion 
 
 	currentTime += dt;
 	numberOfDatapointsLogged++;
@@ -193,79 +151,42 @@ void RigidBody::logDataToFile() {
 	logFile.close();
 }
 
+void plotWrapper(std::vector<double> x, std::vector<double> y, char* label, int sublpotRows, int subplotCols, int positionInSubplot){
+	plt::subplot(sublpotRows, subplotCols, positionInSubplot);
+	plt::plot(x, y, label);
+	plt::legend();
+	plt::grid(true);
+} 
+
 void RigidBody::showPlots() {
-	plt::subplot(1, 3, 1);
-	plt::plot(time, thetaX, "thetaX");
-	plt::legend();
-	plt::subplot(1, 3, 2);
-	plt::plot(time, thetaY, "thetaY");
-	plt::legend();
-	plt::subplot(1, 3, 3);
-	plt::plot(time, thetaZ, "thetaZ");
-	plt::legend();
+	plotWrapper(time, thetaX, "thetaX", 1, 3, 1);
+	plotWrapper(time, thetaY, "thetaY", 1, 3, 2);
+	plotWrapper(time, thetaZ, "thetaZ", 1, 3, 3);
 	plt::show();
 
+	plotWrapper(time, w_bX, "w_bX", 4, 3, 1);
+	plotWrapper(time, w_bY, "w_bY", 4, 3, 2);
+	plotWrapper(time, w_bZ, "w_bZ", 4, 3, 3);
 
-	plt::subplot(4, 3, 1);
-	plt::plot(time, w_bX, "w_bX");
-	plt::legend();
-	plt::subplot(4, 3, 2);
-	plt::plot(time, w_bY, "w_bY");
-	plt::legend();
-	plt::subplot(4, 3, 3);
-	plt::plot(time, w_bZ, "w_bZ");
-	plt::legend();
+	plotWrapper(time, w_gX, "w_gX", 4, 3, 4);
+	plotWrapper(time, w_gY, "w_gY", 4, 3, 5);
+	plotWrapper(time, w_gZ, "w_gZ", 4, 3, 6);
 
-	plt::subplot(4, 3, 4);
-	plt::plot(time, w_gX, "w_gX");
-	plt::legend();
-	plt::subplot(4, 3, 5);
-	plt::plot(time, w_gY, "w_gY");
-	plt::legend();
-	plt::subplot(4, 3, 6);
-	plt::plot(time, w_gZ, "w_gZ");
-	plt::legend();
+	plotWrapper(time, H_bX, "H_bX", 4, 3, 7);
+	plotWrapper(time, H_bY, "H_bY", 4, 3, 8);
+	plotWrapper(time, H_bZ, "H_bZ", 4, 3, 9);
 
-	plt::subplot(4, 3, 7);
-	plt::plot(time, H_bX, "H_bX");
-	plt::legend();
-	plt::subplot(4, 3, 8);
-	plt::plot(time, H_bY, "H_bY");
-	plt::legend();
-	plt::subplot(4, 3, 9);
-	plt::plot(time, H_bZ, "H_bZ");
-	plt::legend();
-
-	plt::subplot(4, 3, 10);
-	plt::plot(time, H_gX, "H_gX");
-	plt::legend();
-	plt::subplot(4, 3, 11);
-	plt::plot(time, H_gY, "H_gY");
-	plt::legend();
-	plt::subplot(4, 3, 12);
-	plt::plot(time, H_gZ, "H_gZ");
-	plt::legend();
+	plotWrapper(time, H_gX, "H_gX", 4, 3, 10);
+	plotWrapper(time, H_gY, "H_gY", 4, 3, 11);
+	plotWrapper(time, H_gZ, "H_gZ", 4, 3, 12);
 	plt::show();
 
+	plotWrapper(time, velX_global_arr, "velX_global_arr", 2, 3, 1);
+	plotWrapper(time, velY_global_arr, "velY_global_arr", 2, 3, 2);
+	plotWrapper(time, velZ_global_arr, "velZ_global_arr", 2, 3, 3);
 
-	plt::subplot(2, 3, 1);
-	plt::plot(time, velX_global_arr, "velX_global_arr");
-	plt::legend();
-	plt::subplot(2, 3, 2);
-	plt::plot(time, velY_global_arr, "velY_global_arr");
-	plt::legend();
-	plt::subplot(2, 3, 3);
-	plt::plot(time, velZ_global_arr, "velZ_global_arr");
-	plt::legend();
-
-	plt::subplot(2, 3, 4);
-	plt::plot(time, posX_global_arr, "posX_global_arr");
-	plt::legend();
-	plt::subplot(2, 3, 5);
-	plt::plot(time, posY_global_arr, "posY_global_arr");
-	plt::legend();
-	plt::subplot(2, 3, 6);
-	plt::plot(time, posZ_global_arr, "posZ_global_arr");
-	plt::legend();
+	plotWrapper(time, posX_global_arr, "posX_global_arr", 2, 3, 4);
+	plotWrapper(time, posY_global_arr, "posY_global_arr", 2, 3, 5);
+	plotWrapper(time, posZ_global_arr, "posZ_global_arr", 2, 3, 6);
 	plt::show();
 }

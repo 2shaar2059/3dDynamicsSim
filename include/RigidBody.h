@@ -4,26 +4,12 @@
 
 using namespace Eigen;
 
-
-struct state{
-	Vector3d P_g; //position vector (global frame)
-	Vector3d V_g; //velocity vector (global frame)
-	Quaternion<double> q; //quaternion representing rotation from global frame to body frame
-	Vector3d H_b; //angular momentum vector (Body frame)
-};
-
-
-struct state_dot{
-	Vector3d V_g; //velocity vector (global frame)
-	Vector3d Anet_g; //Net acceleration vector (global frame)
-	Quaternion<double> q_dot; //TODO
-	Vector3d Tnet_b; //Net torque vector (body frame)
-};
-
 typedef Matrix<double, 13, 1> Vector13d;
 typedef Matrix<double, 6, 1> Vector6d;
 
-
+/*
+	Assumption used by this class: the body-frame's origin is located at the Rigid-Body's center-of-mass
+*/
 class RigidBody {
 public:
 	/*
@@ -53,7 +39,7 @@ public:
 	/*
 		returns the derivative of the state vector
 	*/
-	Vector13d f(Vector13d x, Vector6d u);
+	Vector13d f(Vector13d x, Vector6d u); //consulted this for help: https://www.cs.cmu.edu/~baraff/sigcourse/notesd1.pdf
 	
 	/*Fourth order Runge-Kutta integration.
 		Keyword arguments:
