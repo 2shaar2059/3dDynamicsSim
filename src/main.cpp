@@ -8,16 +8,12 @@
 #include "RigidBody.h"
 #include "utils.h"
 
-#define print(x) std::cout<<(#x)<<":\n"<<(x)<<"\n\n";
-
 using namespace Eigen;
 
 void runPythonScript(const char* filename){
-	FILE* fp;
-
 	Py_Initialize();
 
-	fp = _Py_fopen(filename, "r");
+	FILE* fp = _Py_fopen(filename, "r");
 	PyRun_SimpleFile(fp, filename);
 
 	Py_Finalize();
@@ -58,7 +54,7 @@ int main()
 	}
 
 	auto end = std::chrono::steady_clock::now();
-	std::cout << "Elapsed time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
+	std::cout << "Elapsed time to Simulate: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms\n";
 	rigidBody1.showPlots();
 	rigidBody1.logDataToFile();
 
