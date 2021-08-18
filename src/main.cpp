@@ -23,7 +23,7 @@ int main()
 {
 	auto start = std::chrono::steady_clock::now();
 
-	double maxTime = 10;
+	double maxTime = 1;
 	double currTime = 0;
 	double dt = 0.001; //timestep between state updates
 
@@ -31,24 +31,29 @@ int main()
 	                                      * AngleAxis<double>(rad(0.0),  Vector3d::UnitY())
 	                                      * AngleAxis<double>(rad(0.0), Vector3d::UnitZ());
 
-	Vector3d ang_vel_inital;	ang_vel_inital << 0,	1000,		0; //thetaXdot, thetaYdot, thetaZdot 	[rad/s, rad/s, rad/s]
+	Vector3d ang_vel_inital;	ang_vel_inital << 0,	0,		0; //thetaXdot, thetaYdot, thetaZdot 	[rad/s, rad/s, rad/s]
 	Vector3d lin_pos_inital;	lin_pos_inital << 0,	0,		0; //posX, psoY, posZ					[m, m, m]
-	Vector3d lin_vel_inital;	lin_vel_inital << 1,	0,		0; //velX, velY, velZ					[m/s, m/s, m/s]
+	Vector3d lin_vel_inital;	lin_vel_inital << 0,	0,		0; //velX, velY, velZ					[m/s, m/s, m/s]
 
-	Matrix3d InertiaTensor; InertiaTensor << 90e-6, 0, 0,
-									         0, 45e-6, 0,
-									         0, 0, 45e-6;
-
-	RigidBody rigidBody1 = RigidBody(1, InertiaTensor, rotation_initial, ang_vel_inital, lin_pos_inital, lin_vel_inital);
+	Matrix3d InertiaTensor; InertiaTensor << 0.001, 0, 0,
+									         0, 0.08, 0,
+									         0, 0, 0.08;
+    double mass = 1; //[kg]
+	RigidBody rigidBody1 = RigidBody(mass, InertiaTensor, rotation_initial, ang_vel_inital, lin_pos_inital, lin_vel_inital);
 
 	while (currTime <= maxTime) {
+		std::cout<<currTime<<"\n";
 		rigidBody1.clearAppliedForcesAndMoments();
-		rigidBody1.applyForce(rigidBody1.getRotationGtoB()*Vector3d(0, 0, -0.2), Vector3d(0, .03, 0));
-		rigidBody1.applyForce(rigidBody1.getRotationGtoB()*Vector3d(0, 0, 0.2), Vector3d(0, 0, 0));
+		//rigidBody1.applyForce(rigidBody1.getRotationGtoB()*Vector3d(0, 0, -0.2), Vector3d(0, .03, 0));
+		//rigidBody1.applyForce(rigidBody1.getRotationGtoB()*Vector3d(0, 0, 0.2), Vector3d(0, 0, 0));
+		////rigidBody1.applyMoment(Vector3d(1, 0, 0));
+		//rigidBody1.applyForce(rigidBody1.getRotationGtoB()*Vector3d(0, 0, 9.81), Vector3d(0, 0, 0));
 		
-		//rigidBody1.applyMoment(Vector3d(1, 0, 0));
-		
-		rigidBody1.applyForce(rigidBody1.getRotationGtoB()*Vector3d(0, 0, 9.81), Vector3d(0, 0, 0));
+		//rigidBody1.applyForce(rigidBody1.getRotationGtoB()*Vector3d(0, 0, 9.81*mass), Vector3d(0, 0, 0));
+		//rigidBody1.applyForce(rigidBody1.getRotationGtoB()*Vector3d(0, -1, 0), Vector3d(0.2, 0, 0));
+		//rigidBody1.applyForce(rigidBody1.getRotationGtoB()*Vector3d(0, 1, 0), Vector3d(0.25, 0, 0));
+		//rigidBody1.applyForce(Vector3d(0, 0, 9.0*mass), Vector3d(0, 0, 0));
+
 		rigidBody1.update(dt);
 		currTime += dt;
 	}

@@ -4,6 +4,16 @@ import numpy as np
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 
+minX = np.inf
+maxX = -np.inf
+
+minY = np.inf
+maxY = -np.inf
+
+minZ = np.inf
+maxZ = -np.inf
+
+
 timestamps = []
 rotations = []
 translations  = []
@@ -17,9 +27,18 @@ with open(inputFile, 'r') as f:
 		roation_matrix_row_2 = lines[i+2].split()
 		roation_matrix_row_3 = lines[i+3].split()
 
-		translation_vector_row_1 = lines[i+4].strip()
-		translation_vector_row_2 = lines[i+5].strip()
-		translation_vector_row_3 = lines[i+6].strip()
+		translation_vector_x = float(lines[i+4].strip())
+		translation_vector_y = float(lines[i+5].strip())
+		translation_vector_z = float(lines[i+6].strip())
+
+		minX = min(minX, translation_vector_x)
+		minY = min(minY, translation_vector_y)
+		minZ = min(minZ, translation_vector_z)
+
+		maxX = max(maxX, translation_vector_x)
+		maxY = max(maxY, translation_vector_y)
+		maxZ = max(maxZ, translation_vector_z)
+
 
 		rotations.append(np.asarray([
 										roation_matrix_row_1,
@@ -28,9 +47,9 @@ with open(inputFile, 'r') as f:
 										]).astype(np.float))
 
 		translations.append(np.asarray([
-										translation_vector_row_1,
-										translation_vector_row_2,
-										translation_vector_row_3
+										translation_vector_x,
+										translation_vector_y,
+										translation_vector_z
 										]).astype(np.float))
 dt = timestamps[1]-timestamps[0]
 
@@ -38,28 +57,22 @@ dt = timestamps[1]-timestamps[0]
 fig = plt.figure()
 ax = fig.gca(projection='3d')
 ax.set_title('3D Test')
-
-coordinates = np.concatenate(translations)
-min_bound = min(coordinates)-1
-max_bound = max(coordinates)+1
-ax.set_xlim3d([min_bound, max_bound])
 ax.set_xlabel('X')
-
-ax.set_ylim3d([min_bound, max_bound])
 ax.set_ylabel('Y')
-
-ax.set_zlim3d([min_bound, max_bound])
 ax.set_zlabel('Z')
 
+ax.set_xlim3d([minX-1, maxX+1])
+ax.set_ylim3d([minY-1, maxY+1])
+ax.set_zlim3d([minZ-1, maxZ+1])
 
 pos3d = translations[0]
 x0 = pos3d[0]
 y0 = pos3d[1]
 z0 = pos3d[2]
 
-x_arrow_fixed = ax.quiver(x0,y0,z0,max_bound,y0,z0, color="red")
-y_arrow_fixed = ax.quiver(x0,y0,z0,x0,max_bound,z0, color="green")
-z_arrow_fixed = ax.quiver(x0,y0,z0,x0,y0,max_bound, color="blue")
+x_arrow_fixed = ax.quiver(x0,y0,z0,x0+1,y0,z0, color="red")
+y_arrow_fixed = ax.quiver(x0,y0,z0,x0,y0+1,z0, color="green")
+z_arrow_fixed = ax.quiver(x0,y0,z0,x0,y0,z0+1, color="blue")
 
 arrow_length = 1
 x_arrow_moving = ax.quiver(x0,y0,z0,x0+arrow_length,y0,z0, color="red")

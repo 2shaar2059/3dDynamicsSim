@@ -3,6 +3,7 @@ project(3dDynamicsSim LANGUAGES CXX)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "build/")
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_FLAGS "-O3")
 
 include_directories("include/" "../matplotlib-cpp-master/" "/usr/include/python3.8")
 

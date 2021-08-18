@@ -12,21 +12,21 @@ RigidBody::RigidBody(double mass, Matrix3d InertiaTensor, Quaternion<double> rot
 
 	m = mass; //RigidBody's total mass
 
+	assert(InertiaTensor.determinant() != 0.0);
 	this->InertiaTensor = InertiaTensor; //InertiaTensor along body frame axes
 	InertiaTensorInverse = 	InertiaTensor.inverse();
-
 	currentTime = 0;
 
 	numberOfDatapointsLogged = 0;
 
-	x.segment(0,3) = P_g_initial; //using a block operation to embed the 3 components of the initial-global-linear-position-vector into indexes 0,1,2 of the overall state vector, x
-	
-	x.segment(3,3) = V_g_initial; //using a block operation to embed the 3 components of the initial-global-linear-velocity-vector into indexes 3,4,5 of the overall state vector, x
+	x.segment(0, 3) = P_g_initial; //using a block operation to embed the 3 components of the initial-global-linear-position-vector into indexes 0,1,2 of the overall state vector, x
 
-	x.segment(6,4) = rotation_initial.coeffs(); //using a block operation to embed the 4 components of the initial-orientation-quaternion into indexes 6,7,8,9 of the overall state vector, x
+	x.segment(3, 3) = V_g_initial; //using a block operation to embed the 3 components of the initial-global-linear-velocity-vector into indexes 3,4,5 of the overall state vector, x
+
+	x.segment(6, 4) = rotation_initial.coeffs(); //using a block operation to embed the 4 components of the initial-orientation-quaternion into indexes 6,7,8,9 of the overall state vector, x
 
 	Vector3d H_b_initial = InertiaTensor * w_b_initial;
-	x.segment(10,3) = H_b_initial; //using a block operation to embed the 3 components of the initial-body-angular-momentum-vector into indexes 10,11,12 of the overall state vector, x
+	x.segment(10, 3) = H_b_initial; //using a block operation to embed the 3 components of the initial-body-angular-momentum-vector into indexes 10,11,12 of the overall state vector, x
 
 	u << 0, 0, 0, 0, 0, 0;
 }
@@ -40,12 +40,13 @@ Quaternion<double> RigidBody::getRotationBtoG() {
 }
 
 void RigidBody::applyMoment(Vector3d moment) {
-	u.segment(3,3) += moment; //using a block operation to add the 3 components of the applied-body-moment-vector to indexes 3,4,5 of the overall input vector, u
+	u.segment(3, 3) += moment; //using a block operation to add the 3 components of the applied-body-moment-vector to indexes 3,4,5 of the overall input vector, u
 }
 
 void RigidBody::applyForce(Vector3d force, Vector3d pointOfApplication) {
-	u.segment(0,3) += force; //using a block operation to add the 3 components of the applied-body-force-vector to indexes 0,1,2 of the overall input vector, u
+	u.segment(0, 3) += force; //using a block operation to add the 3 components of the applied-body-force-vector to indexes 0,1,2 of the overall input vector, u
 	applyMoment(pointOfApplication.cross(force)); //accounting for the applied-body-force's resulting moment
+
 }
 
 void RigidBody::clearAppliedForcesAndMoments() {
@@ -55,20 +56,19 @@ void RigidBody::clearAppliedForcesAndMoments() {
 Vector13d RigidBody::f(Vector13d x, Vector6d u) {
 	Vector13d xdot; //derivative of the state vector
 
-	xdot.segment(0,3) = x.segment(3,3); //using a block operation to copy the 3 components of the state-vector at indexes 3,4,5 (which represent global-linear-velocity) into indexes 0,1,2 of the derivative-of-the-overall-state-vector
-
-	Vector3d FAppNet_b = u.segment(0,3); //using a block operation to copy the 3 components of the input-vector at indexes 0,1,2 (which represent net-body-applied-force) into the net-body-applied-force-vector, FAppNet_b
+	xdot.segment(0, 3) = x.segment(3, 3); //using a block operation to copy the 3 components of the state-vector at indexes 3,4,5 (which represent global-linear-velocity) into indexes 0,1,2 of the derivative-of-the-overall-state-vector
+	Vector3d FAppNet_b = u.segment(0, 3); //using a block operation to copy the 3 components of the input-vector at indexes 0,1,2 (which represent net-body-applied-force) into the net-body-applied-force-vector, FAppNet_b
 	Vector3d Anet_g = (getRotationBtoG() * FAppNet_b) / m + g; //finding the net-global-linear-acceleration after taking into account the applied forces and the effect of gravity
-	xdot.segment(3,3) = Anet_g; //using a block operation to embed the 3 components of the net-global-linear-acceleration-vector (derivative of global-linear-velocity) into indexes 3,4,5 of the derivative-of-the-overall-state-vector
+	xdot.segment(3, 3) = Anet_g; //using a block operation to embed the 3 components of the net-global-linear-acceleration-vector (derivative of global-linear-velocity) into indexes 3,4,5 of the derivative-of-the-overall-state-vector
 
-	Vector3d H_b = x.segment(10,3); //using a block operation to copy the 3 components of the state-vector at indexes 10,11,12 (which represent body-angular-momentum) into the body-angular-momentum-vector, H_b
+	Vector3d H_b = x.segment(10, 3); //using a block operation to copy the 3 components of the state-vector at indexes 10,11,12 (which represent body-angular-momentum) into the body-angular-momentum-vector, H_b
 	Vector3d w_b = InertiaTensorInverse * H_b;
 	Quaternion<double> w_b_quaternion_form = Quaternion<double>(0, w_b(0), w_b(1), w_b(2)); //converting the 3-component vector-representation of the body-angular-velocity into an equivalent quaternion form
 	Quaternion<double> qdot = Quaternion<double>(0.5 * (getRotationGtoB() * w_b_quaternion_form).coeffs()); //calculating the derivative of the orientation-qauternion (formula 14 from pg.7 of https://arxiv.org/pdf/0811.2889.pdf)
-	xdot.segment(6,4) = qdot.coeffs(); //using a block operation to embed the 4 components of the derivative-of-the-orientation-quaternion, qdot, into indexes 6,7,8,9 of the derivative-of-the-overall-state-vector
+	xdot.segment(6, 4) = qdot.coeffs(); //using a block operation to embed the 4 components of the derivative-of-the-orientation-quaternion, qdot, into indexes 6,7,8,9 of the derivative-of-the-overall-state-vector
 
-	xdot.segment(10,3) = u.segment(3,3);//using a block operation to copy the 3 components of the input-vector at indexes 3,4,5 (which represent net-body-applied-torque) into indexes 10,11,12 of the derivative-of-the-overall-state-vector
-
+	xdot.segment(10, 3) = u.segment(3, 3); //using a block operation to copy the 3 components of the input-vector at indexes 3,4,5 (which represent net-body-applied-torque) into indexes 10,11,12 of the derivative-of-the-overall-state-vector
+	
 	return xdot;
 }
 
@@ -82,6 +82,7 @@ VectorXd RigidBody::rk4(VectorXd x, VectorXd u, double dt) {
 }
 
 void RigidBody::update(double dt) {
+
 	Quaternion<double> q = getRotationGtoB();
 	Matrix3d R = q.toRotationMatrix();
 	orientations.push_back(R);
@@ -91,7 +92,7 @@ void RigidBody::update(double dt) {
 	thetaY.push_back(euler(1));
 	thetaZ.push_back(euler(2));
 
-	Vector3d H_b = x.segment(10,3); //using a block operation to copy the 3 components of the state-vector at indexes 10,11,12 (which represent body-angular-momentum) into the body-angular-momentum-vector, H_b
+	Vector3d H_b = x.segment(10, 3); //using a block operation to copy the 3 components of the state-vector at indexes 10,11,12 (which represent body-angular-momentum) into the body-angular-momentum-vector, H_b
 	H_bX.push_back(H_b(0));
 	H_bY.push_back(H_b(1));
 	H_bZ.push_back(H_b(2));
@@ -111,12 +112,12 @@ void RigidBody::update(double dt) {
 	w_gY.push_back(w_g(1));
 	w_gZ.push_back(w_g(2));
 
-	Vector3d V_g = x.segment(3,3); //using a block operation to copy the 3 components of the state-vector at indexes 3,4,5 (which represent global-linear-velocity) into the global-linear-velocity-vector, V_g
+	Vector3d V_g = x.segment(3, 3); //using a block operation to copy the 3 components of the state-vector at indexes 3,4,5 (which represent global-linear-velocity) into the global-linear-velocity-vector, V_g
 	velX_global_arr.push_back(V_g(0));
 	velY_global_arr.push_back(V_g(1));
 	velZ_global_arr.push_back(V_g(2));
 
-	Vector3d P_g = x.segment(0,3); //using a block operation to copy the 3 components of the state-vector at indexes 0,1,2 (which represent global-linear-position) into the global-linear-position-vector, P_g
+	Vector3d P_g = x.segment(0, 3); //using a block operation to copy the 3 components of the state-vector at indexes 0,1,2 (which represent global-linear-position) into the global-linear-position-vector, P_g
 	posX_global_arr.push_back(P_g(0));
 	posY_global_arr.push_back(P_g(1));
 	posZ_global_arr.push_back(P_g(2));
@@ -127,7 +128,7 @@ void RigidBody::update(double dt) {
 
 	//numerically integrating the quaternion makes its length "drift" away from having a unit norm. Need to renormalize:
 	double q_length = getRotationGtoB().norm();
-	x.segment(6, 4)/= q_length; //using a block operation to renormalize the 4 components of the state vector at indexes 6,7,8,9 which makeup the Rigid Body's orientation-quaternion
+	x.segment(6, 4) /= q_length; //using a block operation to renormalize the 4 components of the state vector at indexes 6,7,8,9 which makeup the Rigid Body's orientation-quaternion
 
 	currentTime += dt;
 	numberOfDatapointsLogged++;
@@ -137,23 +138,23 @@ void RigidBody::logDataToFile() {
 	std::ofstream logFile;
 	logFile.open("3dAnimationData.txt");
 
-	for(long i=0; i<numberOfDatapointsLogged; i++){
-		logFile << time[i]<< "\n";
-		logFile << orientations[i]<< "\n";
-		logFile << posX_global_arr[i]<< "\n";
-		logFile << posY_global_arr[i]<< "\n";
-		logFile << posZ_global_arr[i]<< "\n";
+	for (long i = 0; i < numberOfDatapointsLogged; i++) {
+		logFile << time[i] << "\n";
+		logFile << orientations[i] << "\n";
+		logFile << posX_global_arr[i] << "\n";
+		logFile << posY_global_arr[i] << "\n";
+		logFile << posZ_global_arr[i] << "\n";
 		logFile << "----------------------------\n";
 	}
 	logFile.close();
 }
 
-void plotWrapper(std::vector<double> x, std::vector<double> y, char* label, int sublpotRows, int subplotCols, int positionInSubplot){
+void plotWrapper(std::vector<double> x, std::vector<double> y, char* label, int sublpotRows, int subplotCols, int positionInSubplot) {
 	plt::subplot(sublpotRows, subplotCols, positionInSubplot);
 	plt::plot(x, y, label);
 	plt::legend();
 	plt::grid(true);
-} 
+}
 
 void RigidBody::showPlots() {
 	plotWrapper(time, thetaX, "thetaX", 1, 3, 1);
