@@ -1,5 +1,5 @@
 #include <iostream>
-#include <math.h>
+#include <cmath>
 #include <chrono>
 #include <unistd.h>
 #include <eigen3/Eigen/Dense>
@@ -41,6 +41,7 @@ int main()
 
 	double mass = 1; //[kg]
 	RigidBody rigidBody1 = RigidBody(mass, InertiaTensor, rotation_initial, ang_vel_inital, lin_pos_inital, lin_vel_inital);
+	rigidBody1.setGravity(Vector3d(0, 0, -9.81));
 
 	while (currTime <= maxTime) {
 		rigidBody1.clearAppliedForcesAndMoments();
