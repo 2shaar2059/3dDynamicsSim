@@ -16,7 +16,7 @@ set(LIBRARY_NAME ${PROJECT_NAME})
 include(GNUInstallDirs)
 set(SOURCES src/RigidBody.cpp src/utils.cpp) # Find source files
 add_library(${PROJECT_NAME} SHARED ${SOURCES}) # Create shared library
-target_link_libraries(${PROJECT_NAME} matplotlib_cpp::matplotlib_cpp)
+target_link_libraries(${PROJECT_NAME} ${matplotlib_cpp_LIBRARIES})
 install(TARGETS ${PROJECT_NAME} EXPORT ${LIBRARY_NAME}Config
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
