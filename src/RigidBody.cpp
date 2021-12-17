@@ -2,6 +2,7 @@
 #include <fstream>
 
 #include "RigidBody.h"
+#include "matplotlibcpp.h"
 #include "utils.h"
 
 using namespace Eigen;
@@ -53,6 +54,10 @@ Vector3d RigidBody::getGlobalLinearVelocity() {
 
 Vector3d RigidBody::getBodyAngularVelocity() {
     return InertiaTensorInverse * (x.segment(10, 3));
+}
+
+Vector3d RigidBody::getGlobalAngularVelocity() {
+    return getRotationBtoG() *getBodyAngularVelocity();
 }
 
 Quaternion<double> RigidBody::getRotationGtoB() {
@@ -189,16 +194,16 @@ void RigidBody::logDataToFile() {
     logFile.close();
 }
 
-void plotWrapper(std::vector<double> x, std::vector<double> y, char *label, int sublpotRows, int subplotCols,
+void plotWrapper(const std::vector<double>& x, const std::vector<double>& y, const char *label, int sublpotRows, int subplotCols,
                  int positionInSubplot) {
     plt::subplot(sublpotRows, subplotCols, positionInSubplot);
-    plt::plot(x, y, label);
+    plt::named_plot(label, x, y);
     plt::legend();
     plt::grid(true);
 }
 
 void RigidBody::showPlots() {
-    plt::backend("TkAgg");
+	plt::backend("TkAgg");
     plotWrapper(time, thetaX, "thetaX", 1, 3, 1);
     plotWrapper(time, thetaY, "thetaY", 1, 3, 2);
     plotWrapper(time, thetaZ, "thetaZ", 1, 3, 3);

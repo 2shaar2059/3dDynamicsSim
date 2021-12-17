@@ -21,6 +21,7 @@ void runPythonScript(const char* filename){
 
 int main()
 {
+
 	auto start = std::chrono::steady_clock::now();
 
 	double maxTime = 11;

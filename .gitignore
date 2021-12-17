@@ -1,11 +1,3 @@
 .idea/
 3dAnimationData.txt
-3dDynamicsSim.cbp
-CMakeCache.txt
-CMakeFiles/
-Makefile
-Testing/
 build/
-cmake_install.cmake
-install_manifest.txt
-lib3dDynamicsSim.so
