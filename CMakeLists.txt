@@ -34,8 +34,8 @@ install(EXPORT ${LIBRARY_NAME}Config DESTINATION share/cmake/${LIBRARY_NAME})
 #building the executable targets of this library
 find_package(3dDynamicsSim REQUIRED)
 
-add_executable(main src/main.cpp)
-target_link_libraries(main 3dDynamicsSim)
+add_executable(3dDynamicsSim_main src/main.cpp)
+target_link_libraries(3dDynamicsSim_main 3dDynamicsSim)
 
 add_executable(test_matplotlib src/test_matplotlib.cpp)
 target_link_libraries(test_matplotlib 3dDynamicsSim)
